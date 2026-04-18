@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Deep Soul Community | FiveM Roleplay</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+        
+        body {
+            background: #050b14;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: #ffaa33;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 12px #ff6600, 0 0 6px #ff4400;
+            transition: transform 0.08s ease;
+        }
+        
+        .smoke-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, rgba(255, 100, 0, 0.7), rgba(255, 50, 0, 0));
+            border-radius: 50%;
+            filter: blur(3px);
+            animation: smokeFade 0.7s ease-out forwards;
+        }
+        
+        @keyframes smokeFade {
+            0% { opacity: 0.7; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(2.8) translate(var(--dx, 15px), var(--dy, -20px)); }
+        }
+        
+        .glass-card {
+            background: rgba(15, 25, 45, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3), 0 0 12px rgba(0, 160, 255, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.4), 0 0 18px rgba(0, 160, 255, 0.4);
+            border-color: #3b82f6;
+        }
+        .glow-text {
+            text-shadow: 0 0 8px rgba(0, 160, 255, 0.6);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+        }
+        .hero-video-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.55) contrast(1.1);
+        }
+        .overlay-dark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 20, 0.65);
+            z-index: 1;
+        }
+        .staff-img {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 12px rgba(59,130,246,0.4);
+        }
+        .form-input {
+            background: rgba(15, 25, 45, 0.8);
+            border: 1px solid #2d3a5e;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+        }
+        .notification-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            backdrop-filter: blur(8px);
+            border-left: 4px solid #3b82f6;
+            padding: 12px 20px;
+            border-radius: 12px;
+            z-index: 999;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 15;
+        }
+        .server-logo {
+            width: 110px;
+            height: auto;
+            filter: drop-shadow(0 0 12px rgba(59,130,246,0.6));
+        }
+        .app-card-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin: 0 auto 12px auto;
+            filter: drop-shadow(0 0 8px rgba(59,130,246,0.5));
+            transition: transform 0.2s;
+        }
+        .glass-card:hover .app-card-img {
+            transform: scale(1.08);
+        }
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.7s ease;
+        }
+        .fade-up.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-dark-gradient text-gray-200">
+
+    <div class="cursor-dot" id="cursorDot"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <nav class="fixed top-0 left-0 w-full z-50 glass-card rounded-none border-x-0 border-t-0 px-6 py-3 backdrop-blur-lg">
+        <div class="container mx-auto flex flex-wrap items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-dragon text-blue-500 text-2xl"></i>
+                <span class="font-bold text-xl tracking-wide">DEEP SOUL</span>
+            </div>
+            <div class="hidden md:flex space-x-6 text-md font-medium" id="nav-links">
+                <a href="#" data-page="home" class="nav-link hover:text-blue-400 transition">Home</a>
+                <a href="#" data-page="applications" class="nav-link hover:text-blue-400 transition">Applications</a>
+                <a href="#" data-page="rules" class="nav-link hover:text-blue-400 transition">Rules</a>
+                <a href="#" data-page="dashboard" class="nav-link hover:text-blue-400 transition">Dashboard</a>
+                <a href="#" data-page="staff" class="nav-link hover:text-blue-400 transition">Staff Team</a>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="discordLoginBtn" class="bg-[#5865F2] hover:bg-[#4752c4] px-5 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2"><i class="fab fa-discord"></i> Discord Login</button>
+                <button id="mobileMenuBtn" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden flex flex-col space-y-3 mt-3 pb-3 text-center bg-black/40 backdrop-blur-lg rounded-2xl p-4">
+            <a href="#" data-page="home" class="mobile-nav-link py-2 hover:text-blue-400">Home</a>
+            <a href="#" data-page="applications" class="mobile-nav-link py-2 hover:text-blue-400">Applications</a>
+            <a href="#" data-page="rules" class="mobile-nav-link py-2 hover:text-blue-400">Rules</a>
+            <a href="#" data-page="dashboard" class="mobile-nav-link py-2 hover:text-blue-400">Dashboard</a>
+            <a href="#" data-page="staff" class="mobile-nav-link py-2 hover:text-blue-400">Staff Team</a>
+        </div>
+    </nav>
+
+    <main id="page-content" class="pt-24 pb-12 px-4 md:px-8 container mx-auto min-h-screen"></main>
+
+    <footer class="border-t border-blue-900/40 py-8 mt-12 text-center text-gray-400 text-sm glass-card rounded-none border-b-0">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-6">
+            <div class="mb-4 md:mb-0">© 2025 Deep Soul Community — Serious Roleplay Experience</div>
+            <div class="flex space-x-6">
+                <a href="#" id="footerDiscord" class="hover:text-blue-400 transition"><i class="fab fa-discord mr-1"></i> Discord</a>
+                <a href="#" class="hover:text-blue-400 transition"><i class="fas fa-shield-alt"></i> Terms</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // -------------------- CURSOR --------------------
+        const cursorDot = document.getElementById('cursorDot');
+        let mouseX = 0, mouseY = 0;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+            createSmokeParticle(mouseX, mouseY);
+        });
+        
+        function createSmokeParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.classList.add('smoke-particle');
+            const dx = (Math.random() - 0.5) * 25;
+            const dy = (Math.random() - 0.5) * 20 - 15;
+            particle.style.left = (x + (Math.random() - 0.5) * 10) + 'px';
+            particle.style.top = (y + (Math.random() - 0.5) * 10) + 'px';
+            particle.style.setProperty('--dx', dx + 'px');
+            particle.style.setProperty('--dy', dy + 'px');
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 700);
+        }
+        
+        setInterval(() => {
+            if (mouseX && mouseY) createSmokeParticle(mouseX, mouseY);
+        }, 200);
+        
+        function refreshCursorHover() {
+            const els = document.querySelectorAll('button, a, .nav-link, .mobile-nav-link, .open-app-form, .btn-primary');
+            els.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    cursorDot.style.transform = 'translate(-50%, -50%) scale(2)';
+                    cursorDot.style.background = '#ffcc44';
+                });
+                el.addEventListener('mouseleave', () => {
+                    cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
+                    cursorDot.style.background = '#ffaa33';
+                });
+            });
+        }
+        
+        // -------------------- PARTICLES --------------------
+        function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth, height = window.innerHeight;
+            let particles = [];
+            function resizeCanvas() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.size = Math.random() * 2.5 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.speedY = (Math.random() - 0.5) * 0.2;
+                    this.color = `rgba(59, 130, 246, ${Math.random() * 0.4 + 0.1})`;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0) this.x = width;
+                    if (this.x > width) this.x = 0;
+                    if (this.y < 0) this.y = height;
+                    if (this.y > height) this.y = 0;
+                }
+                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
+            }
+            function init() { resizeCanvas(); particles = []; for (let i = 0; i < 120; i++) particles.push(new Particle()); animate(); }
+            function animate() { ctx.clearRect(0, 0, width, height); for (let p of particles) { p.update(); p.draw(); } requestAnimationFrame(animate); }
+            window.addEventListener('resize', () => { resizeCanvas(); init(); });
+            init();
+        }
+        
+        // -------------------- DISCORD OAUTH CONFIGURATION --------------------
+        // IMPORTANT: Replace with your actual Discord Application credentials
+        const DISCORD_CLIENT_ID = 'YOUR_DISCORD_CLIENT_ID';  // ← Get from Discord Developer Portal
+        const REDIRECT_URI = encodeURIComponent(window.location.href.split('?')[0]); // Current page URL
+        const DISCORD_OAUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
+        
+        // -------------------- API CONFIGURATION --------------------
+        const API_URL = window.location.origin + '/api.php';
+        
+        let currentUser = null;
+        let activePage = 'home';
+        let playerData = {
+            whitelisted: false,
+            characterName: "Not Set",
+            money: 0,
+            bank: 0,
+            job: "Unemployed",
+            playtime: 0
+        };
+        
+        // Check for Discord OAuth callback
+        async function handleDiscordCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                showNotification('Logging in with Discord...', 'info');
+                
+                try {
+                    // Send the code to your backend to exchange for user data
+                    const response = await fetch(`${API_URL}?action=discordLogin&code=${code}`);
+                    const userData = await response.json();
+                    
+                    if (userData && userData.id) {
+                        currentUser = {
+                            id: userData.id,
+                            username: userData.username,
+                            avatar: userData.avatar,
+                            email: userData.email
+                        };
+                        localStorage.setItem('deepSoulUser', JSON.stringify(currentUser));
+                        showNotification(`Welcome ${currentUser.username}!`, 'success');
+                        updateAuthUI();
+                        await fetchPlayerData(currentUser.id);
+                        if (activePage === 'dashboard') renderDashboard();
+                        // Remove code from URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (error) {
+                    console.error('Discord login error:', error);
+                    showNotification('Discord login failed. Using demo mode.', 'info');
+                    demoLogin();
+                }
+            }
+        }
+        
+        // Demo login for testing (when Discord OAuth is not configured)
+        function demoLogin() {
+            const mockUser = {
+                id: 'disc_' + Math.floor(Math.random() * 99999),
+                username: 'SoulPlayer_' + Math.floor(Math.random() * 100),
+                avatar: null,
+                email: 'player@deepsoul.com',
+            };
+            currentUser = mockUser;
+            localStorage.setItem('deepSoulUser', JSON.stringify(mockUser));
+            showNotification(`Welcome ${currentUser.username}! (Demo Mode)`, 'success');
+            updateAuthUI();
+            fetchPlayerData(currentUser.id);
+            if (activePage === 'dashboard') renderDashboard();
+            else if (activePage === 'applications') renderApplications();
+            else renderHome();
+        }
+        
+        // Real Discord login redirect
+        function discordLogin() {
+            if (DISCORD_CLIENT_ID === 'YOUR_DISCORD_CLIENT_ID') {
+                // No client ID configured, use demo mode
+                showNotification('Discord OAuth not configured. Using demo mode.', 'info');
+                demoLogin();
+            } else {
+                // Redirect to Discord OAuth
+                window.location.href = DISCORD_OAUTH_URL;
+            }
+        }
+        
+        async function fetchPlayerData(discordId) {
+            try {
+                const response = await fetch(`${API_URL}?action=getPlayer&discord_id=${discordId}`);
+                const data = await response.json();
+                if (data && data.discord_id) {
+                    playerData = {
+                        whitelisted: data.whitelisted == 1,
+                        characterName: data.character_name || 'New Player',
+                        money: data.money || 0,
+                        bank: data.bank || 0,
+                        job: data.job || 'Unemployed',
+                        playtime: data.playtime || 0
+                    };
+                    if (activePage === 'dashboard') updateDashboardStats();
+                    return true;
+                }
+            } catch (error) {
+                console.log('API not available, using local data');
+            }
+            return false;
+        }
+        
+        function logout() {
+            currentUser = null;
+            playerData = { whitelisted: false, characterName: "Not Set", money: 0, bank: 0, job: "Unemployed", playtime: 0 };
+            localStorage.removeItem('deepSoulUser');
+            showNotification('Logged out', 'info');
+            updateAuthUI();
+            renderHome();
+        }
+        
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('discordLoginBtn');
+            if (currentUser) {
+                loginBtn.innerHTML = `<i class="fab fa-discord"></i> ${currentUser.username}`;
+                loginBtn.onclick = () => logout();
+                loginBtn.classList.remove('bg-[#5865F2]');
+                loginBtn.classList.add('bg-gray-700');
+            } else {
+                loginBtn.innerHTML = `<i class="fab fa-discord"></i> Discord Login`;
+                loginBtn.onclick = () => discordLogin();
+                loginBtn.classList.remove('bg-gray-700');
+                loginBtn.classList.add('bg-[#5865F2]');
+            }
+        }
+        
+        function loadSession() {
+            const stored = localStorage.getItem('deepSoulUser');
+            if (stored) {
+                try {
+                    currentUser = JSON.parse(stored);
+                    updateAuthUI();
+                    fetchPlayerData(currentUser.id);
+                } catch(e) { currentUser = null; }
+            }
+        }
+        
+        function showNotification(msg, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'notification-toast';
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-green-400' : 'fa-info-circle text-blue-400'} mr-2"></i>${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function updateDashboardStats() {
+            const moneyEl = document.getElementById('stat-money');
+            const bankEl = document.getElementById('stat-bank');
+            const jobEl = document.getElementById('stat-job');
+            const playtimeEl = document.getElementById('stat-playtime');
+            const charNameEl = document.getElementById('stat-char-name');
+            const whitelistBadge = document.getElementById('whitelist-badge');
+            
+            if (moneyEl) moneyEl.innerText = `$${playerData.money.toLocaleString()}`;
+            if (bankEl) bankEl.innerText = `$${playerData.bank.toLocaleString()}`;
+            if (jobEl) jobEl.innerText = playerData.job;
+            if (playtimeEl) { const hours = Math.floor(playerData.playtime / 60); const mins = playerData.playtime % 60; playtimeEl.innerText = `${hours}h ${mins}m`; }
+            if (charNameEl) charNameEl.innerText = playerData.characterName;
+            if (whitelistBadge) {
+                whitelistBadge.innerHTML = playerData.whitelisted ? 
+                    '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm"><i class="fas fa-check-circle mr-1"></i> Whitelisted</span>' : 
+                    '<span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm"><i class="fas fa-clock mr-1"></i> Pending Review</span>';
+            }
+        }
+        
+        // Application Images
+        const appImages = {
+            'Whitelist Application': 'https://img.icons8.com/fluency/96/verified-account.png',
+            'Police Application': 'https://img.icons8.com/fluency/96/police-badge.png',
+            'Ambulance (EMS) Application': 'https://img.icons8.com/fluency/96/ambulance.png',
+            'Mechanic Application': 'https://img.icons8.com/fluency/96/tools.png',
+            'Gang Application': 'https://img.icons8.com/fluency/96/gang.png',
+            'Crew Registration': 'https://img.icons8.com/fluency/96/group.png'
+        };
+        
+        // Page render functions
+        function renderHome() {
+            const container = document.getElementById('page-content');
+            container.innerHTML = `
+                <div class="relative rounded-3xl overflow-hidden mb-16 min-h-[75vh] flex items-center">
+                    <div class="hero-video-wrapper">
+                        <video autoplay loop muted playsinline class="hero-video">
+                            <source src="https://assets.mixkit.co/videos/preview/mixkit-driving-through-a-futuristic-city-at-night-32897-large.mp4" type="video/mp4">
+                        </video>
+                        <div class="overlay-dark"></div>
+                    </div>
+                    <div class="hero-content relative z-20 text-center px-4 w-full">
+                        <div class="flex justify-center mb-6">
+                            <img src="https://cdn.discordapp.com/attachments/1277577384698318849/1486442272106221629/logo_2.png?ex=69e528be&is=69e3d73e&hm=5404ef8a984743d105efb5d3b023290baf66d1e5e36d29f5df158a89b6ea66c8&" alt="Logo" class="server-logo rounded-2xl">
+                        </div>
+                        <h1 class="text-5xl md:text-7xl font-extrabold"><span class="glow-text">Deep Soul</span> Community</h1>
+                        <p class="text-xl md:text-2xl text-blue-200/90 mt-4">Serious RP • Immersive Experience • Next-Gen FiveM</p>
+                        <div class="flex flex-wrap gap-4 justify-center mt-10">
+                            <button class="btn-primary px-8 py-3 rounded-full font-bold" id="joinServerBtn"><i class="fas fa-gamepad mr-2"></i>Join Server</button>
+                            <button class="bg-transparent border border-blue-500 hover:bg-blue-500/20 px-8 py-3 rounded-full font-bold transition" id="applyNowBtn"><i class="fas fa-file-alt mr-2"></i>Apply Now</button>
+                            <button class="bg-[#5865F2] hover:bg-[#4752c4] px-8 py-3 rounded-full font-bold transition" id="discordJoinBtn"><i class="fab fa-discord mr-2"></i>Join Discord</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 mb-20 fade-up">
+                    <div class="glass-card p-6 text-center"><i class="fas fa-briefcase text-4xl text-blue-400 mb-4"></i><h3 class="text-2xl font-bold">Dynamic Jobs & Economy</h3><p>Legal & illegal jobs, player-owned businesses.</p></div>
+                    <div class="glass-card p-6 text-center"><i class="fas fa-skull-crossbones text-4xl text-blue-400 mb-4"></i><h3 class="text-2xl font-bold">Gangs & Police RP</h3><p>Deep gang systems, custom police MDT.</p></div>
+                    <div class="glass-card p-6 text-center"><i class="fas fa-truck-medical text-4xl text-blue-400 mb-4"></i><h3 class="text-2xl font-bold">EMS & Mechanic</h3><p>Full medical RP, vehicle tuning.</p></div>
+                    <div class="glass-card p-6 text-center"><i class="fas fa-calendar-alt text-4xl text-blue-400 mb-4"></i><h3 class="text-2xl font-bold">Active Staff & Events</h3><p>Daily events, responsive staff.</p></div>
+                </div>
+                <div class="text-center glass-card p-8 fade-up"><h2 class="text-3xl font-bold">Why Choose Deep Soul?</h2><p class="mt-4">Optimized scripts, serious roleplay standards, and a mature community.</p></div>
+            `;
+            document.getElementById('joinServerBtn')?.addEventListener('click', () => showNotification('Server IP: 51.79.149.22:30120', 'info'));
+            document.getElementById('applyNowBtn')?.addEventListener('click', () => { setActivePage('applications'); renderApplications(); });
+            document.getElementById('discordJoinBtn')?.addEventListener('click', () => window.open('https://discord.gg/YPjjVRTn', '_blank'));
+            triggerScrollReveal();
+            refreshCursorHover();
+        }
+        
+        function renderDashboard() {
+            if (!currentUser) { showNotification('Login required', 'info'); renderHome(); return; }
+            
+            const html = `
+                <h1 class="text-4xl font-bold mb-8 glow-text text-center"><i class="fas fa-tachometer-alt mr-3"></i>Player Dashboard</h1>
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="glass-card p-6 lg:col-span-1 text-center">
+                        <i class="fas fa-user-circle text-7xl text-blue-400 mb-3"></i>
+                        <h2 class="text-2xl font-bold">${currentUser.username}</h2>
+                        <div id="whitelist-badge" class="mt-2">${playerData.whitelisted ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm"><i class="fas fa-check-circle mr-1"></i> Whitelisted</span>' : '<span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm"><i class="fas fa-clock mr-1"></i> Pending Review</span>'}</div>
+                        <div class="mt-4 text-left space-y-2">
+                            <p><i class="fas fa-user-tag text-blue-400 w-6"></i> Character: <span id="stat-char-name" class="font-semibold">${playerData.characterName}</span></p>
+                            <p><i class="fas fa-briefcase text-blue-400 w-6"></i> Job: <span id="stat-job" class="font-semibold">${playerData.job}</span></p>
+                            <p><i class="fas fa-hourglass-half text-blue-400 w-6"></i> Playtime: <span id="stat-playtime" class="font-semibold">${Math.floor(playerData.playtime / 60)}h ${playerData.playtime % 60}m</span></p>
+                        </div>
+                        <button id="logoutDashBtn" class="mt-6 bg-red-800/50 hover:bg-red-700 px-5 py-2 rounded-full text-sm transition">Logout</button>
+                    </div>
+                    <div class="glass-card p-6 lg:col-span-2">
+                        <h2 class="text-2xl font-bold mb-4"><i class="fas fa-chart-line mr-2"></i>Live Server Stats</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-black/30 rounded-xl p-4 text-center"><p class="text-gray-400 text-sm">💰 Cash Money</p><p class="stat-value text-3xl" id="stat-money">$${playerData.money.toLocaleString()}</p></div>
+                            <div class="bg-black/30 rounded-xl p-4 text-center"><p class="text-gray-400 text-sm">🏦 Bank Balance</p><p class="stat-value text-3xl" id="stat-bank">$${playerData.bank.toLocaleString()}</p></div>
+                        </div>
+                        <div class="mt-4 bg-blue-500/10 rounded-xl p-4"><p class="text-sm text-blue-300"><i class="fas fa-database mr-1"></i> Data synced from FiveM server</p><p class="text-xs text-gray-400 mt-2">Use /syncdata in-game to update your stats</p></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('page-content').innerHTML = html;
+            document.getElementById('logoutDashBtn')?.addEventListener('click', () => logout());
+            updateDashboardStats();
+            triggerScrollReveal();
+            refreshCursorHover();
+        }
+        
+        function renderApplications() {
+            if (!currentUser) { showNotification('Login with Discord to apply', 'info'); renderHome(); return; }
+            const categories = ['Whitelist Application', 'Police Application', 'Ambulance (EMS) Application', 'Mechanic Application', 'Gang Application', 'Crew Registration'];
+            let html = `<h1 class="text-4xl font-bold mb-8 glow-text text-center"><i class="fas fa-clipboard-list mr-3"></i>Applications</h1><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+            categories.forEach((cat) => {
+                const imgUrl = appImages[cat] || 'https://img.icons8.com/fluency/96/application.png';
+                html += `<div class="glass-card p-5 text-center hover:scale-105 transition open-app-form cursor-pointer" data-title="${cat}"><img src="${imgUrl}" alt="${cat}" class="app-card-img"><h3 class="text-xl font-bold mt-2">${cat}</h3><button class="mt-4 bg-blue-600/70 hover:bg-blue-600 px-5 py-2 rounded-full text-sm">Apply Now</button></div>`;
+            });
+            html += `</div><div id="dynamicFormModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="glass-card max-w-md w-full p-6 relative" id="formContainer"></div></div>`;
+            document.getElementById('page-content').innerHTML = html;
+            document.querySelectorAll('.open-app-form').forEach(card => card.addEventListener('click', () => openApplicationForm(card.dataset.title)));
+            triggerScrollReveal(); refreshCursorHover();
+        }
+        
+        function openApplicationForm(title) {
+            const modal = document.getElementById('dynamicFormModal');
+            const formContainer = document.getElementById('formContainer');
+            formContainer.innerHTML = `<h2 class="text-2xl font-bold mb-4">${title}</h2><input type="text" id="fullName" placeholder="Full Name" class="form-input w-full mb-3"><input type="number" id="age" placeholder="Age (16+)" class="form-input w-full mb-3"><input type="text" id="experience" placeholder="RP Experience" class="form-input w-full mb-3"><textarea id="reason" placeholder="Why join?" rows="3" class="form-input w-full mb-4"></textarea><div class="flex gap-3"><button id="submitAppBtn" class="btn-primary px-5 py-2 rounded-lg w-full">Submit</button><button id="closeModalBtn" class="bg-gray-700 px-5 py-2 rounded-lg">Cancel</button></div>`;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('submitAppBtn').onclick = () => {
+                const name = document.getElementById('fullName').value, age = document.getElementById('age').value;
+                if(!name || !age) { showNotification('Fill required fields', 'info'); return; }
+                showNotification(`${title} submitted! Staff will review.`, 'success');
+                modal.classList.add('hidden');
+            };
+            document.getElementById('closeModalBtn').onclick = () => modal.classList.add('hidden');
+            refreshCursorHover();
+        }
+        
+        function renderRules() {
+            document.getElementById('page-content').innerHTML = `<h1 class="text-4xl font-bold mb-8 glow-text"><i class="fas fa-gavel mr-3"></i>Rules</h1><div class="grid md:grid-cols-2 gap-6"><div class="glass-card p-6"><h2 class="text-2xl font-bold border-b border-blue-500 pb-2"><i class="fas fa-gamepad mr-2"></i>Roleplay Rules</h2><ul class="mt-4 space-y-2 list-disc pl-5"><li>No FailRP / Powergaming</li><li>Respect FearRP</li><li>No Metagaming</li><li>Realistic character development</li></ul></div><div class="glass-card p-6"><h2 class="text-2xl font-bold border-b border-blue-500 pb-2"><i class="fab fa-discord mr-2"></i>Discord Rules</h2><ul class="mt-4 space-y-2 list-disc pl-5"><li>No NSFW or spam</li><li>Respect all members & staff</li><li>English only in voice/text</li></ul></div></div>`;
+            triggerScrollReveal(); refreshCursorHover();
+        }
+        
+        function renderStaff() {
+            const staffMembers = [
+                { name: 'Alex "Nova"', role: 'Founder & Lead Admin', imgIcon: 'fa-crown' },
+                { name: 'Jordan Blake', role: 'Senior Moderator', imgIcon: 'fa-shield-haltered' },
+                { name: 'Sam Rivers', role: 'Head of Police', imgIcon: 'fa-badge-police' },
+                { name: 'Casey Morgan', role: 'EMS Director', imgIcon: 'fa-truck-medical' },
+                { name: 'Taylor Chen', role: 'Community Manager', imgIcon: 'fa-users' },
+            ];
+            let cards = staffMembers.map(s => `<div class="glass-card p-6 text-center"><div class="staff-img mx-auto"><i class="fas ${s.imgIcon} text-5xl text-blue-400"></i></div><h3 class="text-xl font-bold mt-4">${s.name}</h3><p class="text-blue-300">${s.role}</p></div>`).join('');
+            document.getElementById('page-content').innerHTML = `<h1 class="text-4xl font-bold mb-8 glow-text text-center"><i class="fas fa-users mr-3"></i>Staff Team</h1><div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">${cards}</div>`;
+            triggerScrollReveal(); refreshCursorHover();
+        }
+        
+        function setActivePage(page) {
+            activePage = page;
+            if(page === 'home') renderHome();
+            else if(page === 'applications') renderApplications();
+            else if(page === 'rules') renderRules();
+            else if(page === 'dashboard') renderDashboard();
+            else if(page === 'staff') renderStaff();
+            document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+                if(link.dataset.page === page) link.classList.add('text-blue-400', 'border-b-2', 'border-blue-400');
+                else link.classList.remove('text-blue-400', 'border-b-2', 'border-blue-400');
+            });
+        }
+        
+        function triggerScrollReveal() {
+            const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('revealed'); }); }, { threshold: 0.1 });
+            document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+            document.querySelectorAll('.glass-card, .grid > div').forEach(el => { if(!el.classList.contains('fade-up')) el.classList.add('fade-up'); observer.observe(el); });
+        }
+        
+        function bindNavigation() {
+            document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+                link.addEventListener('click', (e) => { e.preventDefault(); setActivePage(link.dataset.page); document.getElementById('mobileMenu')?.classList.add('hidden'); });
+            });
+            document.getElementById('mobileMenuBtn')?.addEventListener('click', () => document.getElementById('mobileMenu')?.classList.toggle('hidden'));
+            document.getElementById('footerDiscord')?.addEventListener('click', (e) => { e.preventDefault(); window.open('https://discord.gg/YPjjVRTn', '_blank'); });
+        }
+        
+        async function init() {
+            await handleDiscordCallback();
+            loadSession();
+            bindNavigation();
+            setActivePage('home');
+            initParticles();
+            refreshCursorHover();
+        }
+        init();
+    </script>
+</body>
+</html>
