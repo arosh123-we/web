@@ -24,7 +24,7 @@ define('DB_NAME', 'u224984_cghr9WzOpa');
 // Get these from https://discord.com/developers/applications
 define('DISCORD_CLIENT_ID', '1495205328394911796');     // Replace with your Discord App Client ID
 define('DISCORD_CLIENT_SECRET', 'Fv08maHzkXHpEdR_8K_SONysjC9jGZpb'); // Replace with your Discord App Client Secret
-define('DISCORD_REDIRECT_URI', 'file:///C:/Users/arosh/OneDrive/Desktop/deep-web/index.html'); // Replace with your actual website URL
+define('DISCORD_REDIRECT_URI', 'https://arosh123-we.github.io/web/'); // Replace with your actual website URL
 
 // ==================== DATABASE CONNECTION ====================
 function getDatabaseConnection() {
